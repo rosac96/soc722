@@ -1,0 +1,170 @@
+---
+title: "MD_2_homework_CR"
+author: "Christoph Rosa"
+date: "2022-09-03"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Chapter 2
+
+## Question 1
+
+Installing tidyverse:
+```{r}
+library(tidyverse)
+```
+
+Reading the data:
+```{r}
+olympics <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-07-27/olympics.csv")
+glimpse(olympics)
+```
+
+Let's look at the "medal" column:
+```{r}
+table(olympics$medal)
+```
+
+## Question 1
+
+Let's create a table with only the winners (gold medalists).
+```{r}
+gold_medalists <- olympics %>% 
+  filter(medal == "Gold")
+nrow(gold_medalists)
+```
+
+It has 13372 rows. 
+
+## Question 2
+
+I'd say a scatterplott is a decent way to display the age of the winners each year.
+```{r}
+library(ggplot2)
+ggplot(gold_medalists, aes(x= year, y= age)) + 
+  geom_point() +
+  ggtitle("Age of gold medalists") +
+  xlab("Year") +
+  ylab("Age")
+```
+
+It appears as if in the second half of the 20th century the gold medalists have become somewhat younger on average. 
+
+To solve the overplotting issue, we could "jitter" the dots by slightly spreading them randomly over the x-axis. However, since we want to depict a lot of years on the x-axis, our plot is a bit too crowded for that.
+
+Instead, I'd make the dots a bit transparent, so we can see where many of them overlap - and therefore how many gold medalists were of a certain age each year.
+
+```{r}
+ggplot(gold_medalists, aes(x= year, y= age)) + 
+  geom_point(alpha = 0.1) +
+  ggtitle("Age of gold medalists") +
+  xlab("Year") +
+  ylab("Age")
+```
+
+## Question 3
+
+First, let's calculate how many gold medals the US won each year.
+```{r}
+us_medals <- gold_medalists %>% 
+  filter(noc == "USA") %>% 
+  group_by(year) %>% 
+  summarise(num_medals = n())
+```
+
+Now, let's see the trajectory over the years:
+```{r}
+ggplot(us_medals, aes(x = year, y = num_medals)) +
+  geom_line() +
+  ggtitle("Number of US gold medals") +
+  xlab("Year") +
+  ylab("Medals")
+```
+
+It looks as if the States were most successful in 1984. Towards the end, the line gets more "wiggly" because the Olympic Winter Games are now included, too. The US wins far less gold medals in those, probably because there are less medals to win in total, and because other countries like Austria fare far better in the Winter Games. 
+
+## Question 4
+
+First, the dataset on gold medalists in gymnastics and the 100 meter dash:
+```{r}
+two_events <- gold_medalists %>%
+  filter(
+    event == "Gymnastics Men's Individual All-Around"  |
+      event == "Gymnastics Women's Individual All-Around" |
+      event == "Athletics Women's 100 metres"   |
+      event == "Athletics Men's 100 metres"
+  ) 
+```
+
+Now, a dataset with only gymnastics:
+
+```{r}
+gymnastics <- two_events %>% 
+  filter(
+    event == "Gymnastics Men's Individual All-Around" |
+    event == "Gymnastics Women's Individual All-Around"
+  )
+
+```
+
+A histogram of the ages of the gymnastics gold medalists:
+```{r}
+ggplot(gymnastics, aes(x = age)) +
+  geom_histogram(binwidth = 1, color = "white") +
+  ggtitle("Age distribution of gold medalists") +
+  xlab("Age") +
+  ylab("Winners")
+```
+
+It appears as if most of the gymnastics gold medalists are in their twenties, with slightly less in their late teens and only a few outliers in their early 30s. 
+
+```{r}
+ggplot(gymnastics, aes(x = age)) +
+  geom_histogram(binwidth = 1, color = "white") +
+  facet_wrap(~ event, nrow = 1) +
+  xlab("Age") +
+  ylab("Winners")
+```
+
+The male gold medalists appear to be significantly older on average.
+
+## Question 5
+
+Here are the four boxplots for gymnastics and the 100 meter dash, each divided by gender.
+
+```{r}
+ggplot(two_events, aes(x = event, y = height)) +
+  geom_boxplot() +
+  scale_x_discrete(labels = c("100m men", "100m women", "Gymnastics men", "Gymnastics women")) +
+  ggtitle("Height of gold medalists") +
+  xlab("Competition") +
+  ylab("Height")
+```
+
+Unsurprisingly, for each event the female gold medalists were smaller than their male counterparts. Also, the winners of the 100 meter dash were, on average, far taller than the gymnastics winners - to the point where male gymnasts tend to be about as tall as female sprinters. 
+
+## Question 6
+
+Let's filter out the US winners first.
+```{r}
+us_medalists <- gold_medalists %>% 
+  filter(noc == "USA")
+```
+
+Now, a barplot of the number of gold medalists, separated by gender:
+```{r}
+ggplot(us_medalists, aes(x = year, fill = sex)) +
+  geom_bar(position = position_dodge(preserve = "single")) +
+  ggtitle("Number of US gold medalists") +
+  xlab("Year") +
+  ylab("Winners")
+```
+
+It's striking how, starting in about the 1980s, female US athletes started to surpass their male counterparts when it comes to the number of gold medals they won.
+
+
+
+
+

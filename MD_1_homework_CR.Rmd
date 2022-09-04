@@ -1,0 +1,126 @@
+---
+title: "MD 1 Homework"
+author: "Christoph Rosa"
+date: "2022-09-01"
+output:
+  html_document: default
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+# Chapter 1
+
+## Question 1:
+
+Installing packages. 
+
+```{r, eval = FALSE}
+install.packages("causact")
+install.packages("dplyr")
+install.packages("igraph")
+
+```
+
+## Question 2
+
+Loading packages:
+
+```{r}
+library(causact)
+library(dplyr)
+library(igraph)
+```
+
+Let's check out if calling as_data_frame without specifying a package works on a vector.
+
+```{r}
+#df <- as_data_frame(x = c(1,2,3))
+```
+
+Shocking. Now for dplyr's as_data_frame:
+
+```{r}
+df <- dplyr::as_data_frame(x = c(1,2,3))
+glimpse(df)
+```
+
+Using dplyr' n_distinct function:
+
+```{r}
+x <- c(5,6,2,7,9,1)
+dplyr::n_distinct(x)
+```
+
+R by default used the function from igraph because it "masked" the dplyr function, simply because igraph was installed later. Had we installed igraph first, R should by default use the dplyr function, as the one from igraph would be "masked" by it. 
+
+## Question 3
+
+```{r}
+?n_distinct
+```
+
+It calculates the number of distinct values (numbers, strings, etc.) in a vector. 
+
+## Question 4
+
+```{r}
+glimpse(baseballData)
+```
+
+The dataset has 12,145 rows and five columns. The variables in the column "Home" are factors, the one in "Homescore" are integers. 
+
+## Question 5
+
+```{r}
+baseballData[1,]
+```
+
+Each row represents one baseball game.
+
+```{r}
+baseballData[,2:3] %>% head()
+```
+
+The home team and the visiting team in each of the games.
+
+## Question 6
+
+The hockey data:
+
+```{r}
+name <-
+  c(
+    "Wayne Gretzky",
+    "Gordie Howe",
+    "Jaromir Jagr",
+    "Brett Hull",
+    "Marcel Dionne",
+    "Phil Esposito" ,
+    "Mike Gartner",
+    "Alex Ovechkin",
+    "Mark Messier" ,
+    "Steve Yzerman"
+  )
+
+goals <- c(894, 801, 766, 741, 731, 717, 708, 700, 694, 692)
+
+year_started <- c(1979, 1946, 1990, 1986, 1971, 1963, 1979, 2005, 1979, 1983)
+
+```
+
+Building the dataframe:
+
+```{r}
+df <- tibble( 
+  "Name" = name, 
+  "Goals" = goals, 
+  "Year started" = year_started) 
+
+glimpse(df)
+```
+
+
+
+
+
+
