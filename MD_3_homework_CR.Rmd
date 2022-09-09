@@ -1,0 +1,147 @@
+---
+title: "MD_3_homework_CR"
+author: "Christoph Rosa"
+date: "2022-09-09"
+output: html_document
+---
+
+# Set-up
+
+Installing packages and clearing environmnent. 
+```{r}
+library(tidyverse)
+rm(list = ls())
+```
+
+Downloading our main dataset. 
+```{r}
+mariokart <- read_csv("../Data/world_records.csv")
+glimpse(mariokart)
+```
+
+
+# Question 1
+
+Filtering out any records that wasn't over three laps.
+```{r}
+threelaps <- mariokart %>% filter(type == "Three Lap")
+```
+
+Filtering out any childhood trauma:
+```{r}
+norainbow <- threelaps %>% filter(track != "Rainbow Road")
+```
+
+And now the opposite, only Rainbow Road records:
+```{r}
+rainbow <- threelaps %>% filter(track == "Rainbow Road")
+```
+
+
+# Question 2
+
+```{r}
+rainbow %>% summarize(mean = mean(time), sd = sd(time))
+norainbow %>% summarize(mean = mean(time), sd = sd(time))
+```
+
+As expected, the average world records on Rainbow Road are more than twice as long as the average records on all other tracks. Their standard deviation is also much higher, so apparently their was more room for improvement since the first records were set.
+
+
+# Question 3
+
+```{r}
+threelaps %>% group_by(track) %>% 
+  summarize(records = n()) %>% 
+  arrange(records)
+```
+ 
+The track for which the most records were set is Toad's Turnpike, with a total of 124. 
+
+# Question 4
+
+```{r}
+threelaps %>% group_by(track, player) %>% 
+  summarize(driverrecords = n()) %>% 
+  arrange(desc(driverrecords))
+```
+
+With 26 distinct records on the track Choco Mountain, Penev is the driver with the most records on any one track.
+
+# Question 5
+
+```{r}
+threelaps %>% group_by(track) %>% 
+  summarize(mean = mean(time)) %>% 
+  arrange(desc(mean))
+```
+
+As we would expect, Rainbow Road is the track with the highest average time, followed by Wario Stadium with quite some distance. 
+
+```{r}
+threelaps %>% 
+  group_by(player) %>% 
+  arrange(time) %>% 
+  slice(1) %>% 
+  head()
+```
+
+Let's get each track's best time:
+```{r}
+threelaps %>% 
+  group_by(track) %>% 
+  arrange(time) %>% 
+  slice(1) %>% 
+  select(track, time)
+```
+
+
+# Question 6
+
+Let's see which records held for more than 100 days and create a binary variable for that:
+```{r}
+longrecords <- threelaps %>% 
+  mutate(long = if_else(record_duration > 100, 1, 0))
+```
+
+Let's find out which player sets the most durable records:
+
+```{r}
+longrecords %>% filter(long == 1) %>% 
+  group_by(player) %>% 
+  summarize(records = n()) %>% 
+  arrange(desc(records))
+
+```
+
+The driver MR had the most records that last for more than a hundred days, 81 in total. 
+
+
+# Question 7
+
+Downloading our second dataset, we'll only keep the variable "nationality" of each player:
+```{r}
+drivers <- read_csv("../Data/drivers.csv") %>% 
+  select(player, nation) %>% 
+  distinct()
+glimpse(drivers)
+```
+
+After left-joining the nationality info to our records data, we can compare how each country is doing by creating a barplot:
+```{r}
+data <- left_join(threelaps, drivers, by = "player")
+
+ggplot(data,
+       aes(nation)) +
+  geom_bar() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(title = "Number of records by country",
+       x = "",
+       y = "Records")
+```
+
+
+
+
+
