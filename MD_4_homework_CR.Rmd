@@ -92,8 +92,6 @@ ggplot(avg,
        x = "Year",
        y = "Average salary",
        col = "Position")
-
-test <- avg %>% filter(year == 2018)
 ```
 
 With the notable exception of the poor RBs, the average salary for every position has increased more or less steadily over the years.
