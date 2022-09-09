@@ -1,0 +1,105 @@
+---
+title: "MD_4_homework_CR"
+author: "Christoph Rosa"
+date: "2022-09-09"
+output: html_document
+---
+
+# Set-up
+
+Installing tidyverse and cleaning up:
+```{r}
+library(tidyverse)
+rm(list = ls())
+```
+
+
+# Question 1
+
+Downloading the NFL data:
+```{r}
+nflraw <- read_csv("https://raw.githubusercontent.com/NicolasRestrep/223_course/main/Data/nfl_salaries.csv")
+glimpse(nflraw)
+```
+
+
+# Question 2
+
+Tidying up our dataset:
+```{r}
+nfl <- nflraw %>% 
+  pivot_longer(names_to = "position",
+               values_to = "salary",
+               cols = -year)
+glimpse(nfl)
+```
+
+
+# Question 3
+
+Making a history of Quarterback salaries:
+```{r}
+qbs <- nfl %>% filter(position == "Quarterback") 
+
+options(scipen=10000)
+
+ggplot(qbs, aes(salary)) +
+  geom_histogram() + 
+  theme_minimal() +
+  labs(title = "Salaries of NFL quarterbacks",
+         x = "",
+         y = "Salary in USD")
+
+```
+
+And now, to compare years:
+```{r}
+ggplot(qbs, aes(salary)) +
+  geom_histogram() + 
+  theme_minimal() +
+  labs(title = "Salaries of NFL quarterbacks",
+         x = "",
+         y = "Salary in USD") +
+  theme(axis.text.x = element_text(angle = 90)) +
+  facet_wrap(~ year, nrow = 2)
+```
+
+It looks as if over the years, the salaries of the highest paid Quarterbacks have become even higher. It also seems like the very few best-paid players have set themselves apart even from this group of high-earning outliers. 
+
+
+# Question 4
+
+Calculating average salaries per year and position:
+```{r}
+avg <- nfl %>% group_by(position, year) %>% 
+  summarize(mean = mean(salary, na.rm = TRUE))
+glimpse(avg)
+```
+
+
+# Question 5
+
+Let's plot how the salaries of the positions have evolved over the years:
+
+```{r}
+ggplot(avg,
+       aes(year, mean, 
+           group = position,
+           color = position)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Average salary by player position",
+       x = "Year",
+       y = "Average salary",
+       col = "Position")
+
+test <- avg %>% filter(year == 2018)
+```
+
+With the notable exception of the poor RBs, the average salary for every position has increased more or less steadily over the years.
+
+This increase was steeper for the - on average - better-paid positions (the best-paid positions have been quite consistently Linemen, both on Offense and Defense). This has increased the disparity of the average salaries over time. 
+
+
+
+
