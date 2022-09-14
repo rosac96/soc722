@@ -1,0 +1,208 @@
+---
+title: "DV_4_homework_CR"
+author: "Christoph Rosa"
+date: "2022-09-13"
+output: html_document
+---
+
+# Set-up
+
+
+Installing packages:
+```{r}
+library(tidyverse)
+```
+
+Downloading and cleaning up data:
+```{r}
+tvratings <- read_csv("../Data/tv_ratings.csv")
+glimpse(tvratings)
+```
+
+
+# Question 1
+
+First, let's filter out the "short" shows:
+```{r}
+tvlong <- tvratings %>% 
+  group_by(title) %>% 
+  mutate(num_seasons = max(seasonNumber)) %>% 
+  ungroup() %>% 
+  filter(num_seasons >= 5)
+
+```
+
+And now we plot their ratings over the course of their run:
+```{r}
+ggplot(tvlong,
+       aes(seasonNumber, av_rating,
+           group = title)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Average rating of show by season",
+       x = "Season",
+       y = "Average rating")
+```
+
+Honestly, I can't.
+
+
+# Question 2
+
+Faceting by genre:
+```{r}
+ggplot(tvlong,
+       aes(seasonNumber, av_rating,
+           group = title)) +
+  geom_line() +
+  theme_minimal() +
+    labs(title = "Average rating of show by season",
+       x = "Season",
+       y = "Average rating") +
+  facet_wrap(~ genres)
+```
+
+Now it becomes apparent that, in the majority of cases, the ratings of shows declined as the seasons progress. 
+
+```{r}
+tvlong %>% 
+  filter(genres == "Drama,Family,Fantasy") %>% 
+  select(title, av_rating) 
+```
+
+Looks like "Are you Afraid of the Dark?" (whatever that is) really lost it in its last two seasons. 
+
+
+# Question 3
+
+Plotting the best-rated shows:
+```{r}
+best <- tvratings %>% 
+  filter(av_rating >= 9)
+
+ggplot(best,
+       aes(genres)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Number of top-rated shows per genre",
+       x = "Genre",
+       y = "# of shows with average rating > 9.0") +
+  scale_y_continuous(breaks = seq(0, 14, 2))
+```
+
+Flipping the barplot:
+```{r}
+ggplot(best,
+       aes(genres)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Number of top-rated shows per genre",
+       x = "Genre",
+       y = "# of shows with average rating > 9.0") +
+  scale_y_continuous(breaks = seq(0, 14, 2)) +
+  coord_flip()
+```
+
+The genre drama has the most top-rated shows. Not very surprising since all the other genre-combinations are very specific. 
+
+
+# Question 4
+
+Coding all comedy-somethings as comedies: 
+```{r}
+comedies_dramas <- tvratings %>% 
+  mutate(is_comedy = if_else(str_detect(genres, "Comedy"), 
+                             1, 
+                             0)) %>% # If it contains the word comedy then 1, else 0
+  filter(is_comedy == 1 | genres == "Drama") %>% # Keep comedies and dramas
+  mutate(genres = if_else(genres == "Drama", # Make it so that we only have those two genres
+                          "Drama", 
+                          "Comedy"))
+
+glimpse(comedies_dramas)
+```
+
+Comparing the two genres:
+```{r}
+ggplot(comedies_dramas,
+       aes(av_rating, color = genres)) +
+  geom_density() +
+  theme_minimal() +
+  labs(title = "Distribution of average ratings by genre",
+       x = "Average rating",
+       y = "Density", 
+       col = "Genre")
+```
+
+The densities are very similar, although dramas appear to be rated a tiny bit higher.
+
+
+# Question 5
+
+Plotting histograms:
+```{r}
+ggplot(comedies_dramas,
+       aes(av_rating)) +
+  geom_histogram() +
+  theme_minimal() +
+  labs(title = "Distribution of average ratings by genre",
+       x = "Average rating",
+       y = "Number of shows") +
+  facet_wrap(~ genres)
+```
+
+This shows that a) there were far more comedies (by our categorization) in the dataset and b) the distribution of low-rated outliers is quite similar.
+
+```{r}
+ggplot(comedies_dramas,
+       aes(av_rating, color = genres)) +
+  geom_freqpoly() +
+  theme_minimal() +
+  labs(title = "Distribution of average ratings by genre",
+       x = "Average rating",
+       y = "Number of shows",
+       col = "Genres")
+```
+
+For cases like this, I'd definitely prefer the frequency plot we plotted last. 
+
+
+# Question 6
+
+```{r}
+ggplot(comedies_dramas,
+       aes(av_rating, share)) +
+  geom_bin_2d() +
+  theme_minimal() +
+  labs(title = "Viewership by average rating",
+       x = "Average rating for season",
+       y = "Share of viewership")
+```
+
+This creates a "heat map" which can be a bit more intuitive than a scatterplot when it comes to showing where a distribution is particularly dense. 
+
+```{r}
+ggplot(comedies_dramas,
+       aes(av_rating, share,
+           fill = genres)) +
+  geom_bin_2d() +
+  theme_minimal() +
+  labs(title = "Viewership by average rating",
+       x = "Average rating for season",
+       y = "Share of viewership",
+       fill = "Genre")
+```
+
+It looks as if decently-rated comedies had a much higher viewership than corresponding dramas. 
+
+```{r}
+comedies_dramas$title[which.max(comedies_dramas$share)]
+```
+
+That was apparently "Dekalog". Weird that I never heard of it, looks really interesting though. 
+
+
+
+
+
+
