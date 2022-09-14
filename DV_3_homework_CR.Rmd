@@ -1,0 +1,151 @@
+---
+title: "DV_3_homework_CR"
+author: "Christoph Rosa"
+date: "2022-09-14"
+output: html_document
+---
+
+# Question 1
+
+Installing packages and loading data:
+
+```{r}
+library(tidyverse)
+exercisedata <- read_csv("../Data/visualize_data.csv")
+glimpse(exercisedata)
+```
+
+I'd expect that people who exercise a lot would have a below average BMI, i.e., below zero. 
+
+Let's check that:
+```{r}
+cor(exercisedata$Exercise, exercisedata$BMI)
+```
+
+The negative output points to the expected negative correlation - more exercise minutes correlate with a lower BMI.
+
+```{r}
+ggplot(exercisedata,
+       aes(Exercise, BMI)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Relationship between BMI and exercise",
+         x = "Exercise in minutes",
+         y = "BMI")
+```
+
+Friendly lil' T-Rex says hello.
+
+
+# Question 2
+
+Installing package:
+```{r}
+library(causact)
+glimpse(corruptDF)
+```
+
+The CPI is an index provided by the NGO Transparency International and indicates how corrupt a country is perceived to be by consumers. This variable shows the 2017 value for this index.
+The HDI is a well-known index for a country's human development and composed of the live expectancy, average income and education level of a country.
+
+# Question 3
+
+```{r}
+ggplot(corruptDF,
+       aes(CPI2017, HDI2017)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Relationship between HDI and CPI, 2017",
+       x = "Corruption Perception Index (CPI)",
+       y = "Human Development Index (HDI)")
+```
+
+There seems to be a strong, positive correlation between perceived corruption and the level of human development - countries with a high CPI (less corrupt) tend to score higher in the HDI (more developed).
+
+
+# Question 4
+
+First, a plot using "lm":
+```{r}
+ggplot(corruptDF,
+       aes(CPI2017, HDI2017)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_minimal() +
+  labs(title = "Relationship between HDI and CPI, 2017",
+       x = "Corruption Perception Index (CPI)",
+       y = "Human Development Index (HDI)")
+```
+
+And now using "gam":
+```{r}
+ggplot(corruptDF,
+       aes(CPI2017, HDI2017)) +
+  geom_point() +
+  geom_smooth(method = "gam") +
+  theme_minimal() +
+  labs(title = "Relationship between HDI and CPI, 2017",
+       x = "Corruption Perception Index (CPI)",
+       y = "Human Development Index (HDI)")
+```
+
+While "lm" uses a simple linear regression model, "gam" uses a generalized additive model. Basically, "lm" will try to fit a straight line over our plot while "gam" can also show non-linear relationships.
+Here, I'd prefer "gam" as it shows that the correlation isn't entirely linear, at higher CPI values (very little corruption) the HDI levels barely change. 
+
+
+# Question 5
+
+```{r}
+ggplot(corruptDF,
+       aes(CPI2017, HDI2017,
+           color = region,
+           fill = region)) +
+  geom_point() +
+  geom_smooth(method = "gam") +
+  theme_minimal() +
+  labs(title = "Relationship between HDI and CPI, 2017",
+       x = "Corruption Perception Index (CPI)",
+       y = "Human Development Index (HDI)",)
+```
+
+We see that there are clear differences in the distribution of HDI and CPI values between the regions. The highest values in both indices are scored by countries in Western Europe, the lowest by those in sub-Sahara Africa.
+We can make these differences clearer by using facets:
+
+```{r}
+ggplot(corruptDF,
+       aes(CPI2017, HDI2017)) +
+  geom_point() +
+  geom_smooth(method = "gam") +
+  theme_minimal() +
+  labs(title = "Relationship between HDI and CPI, 2017",
+       x = "Corruption Perception Index (CPI)",
+       y = "Human Development Index (HDI)") +
+  facet_wrap(~ region)
+```
+
+
+# Questions 6-8
+
+```{r}
+ggplot(corruptDF,
+       aes(CPI2017, HDI2017)) +
+  geom_point() +
+  geom_smooth(method = "gam") +
+  theme_minimal() +
+  labs(title = "Relationship between HDI and CPI",
+       x = "Corruption Perception Index (CPI)",
+       y = "Human Development Index (HDI)",
+       subtitle = "By country, 2017",
+       caption = "Data provided by the R-package 'causact'.") +
+  scale_x_reverse()
+
+ggsave("DV3.pdf")
+```
+
+
+
+
+
+
+
+
