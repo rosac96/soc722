@@ -1,0 +1,227 @@
+---
+title: "DV_5_homework_CR"
+author: "Christoph Rosa"
+date: "2022-09-14"
+output: html_document
+---
+
+# Set-up
+
+Installing packages and reading in the data:
+```{r}
+library(tidyverse)
+wncaa <- read_csv("../Data/wncaa.csv")
+glimpse(wncaa)
+```
+
+
+# Question 1
+
+Let's start with the percentage of tournament wins for each team:
+```{r}
+wins <- wncaa %>% 
+  filter(tourney_finish == "Champ") %>% 
+  group_by(school) %>% 
+  summarize(N = n()) %>% 
+  mutate(freq = N/sum(N),
+         pct = round((freq*100), 0))
+```
+
+Seems as if Tennessee and UConn together account for about half of all tournament wins. 
+```{r}
+ggplot(wins,
+       aes(school, pct))+
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Tournament wins per school",
+       y = "Won tournaments as % of all tournaments",
+       x = "School")
+```
+
+None of the other schools have become champions more than twice so far.
+
+
+# Question 2
+
+```{r}
+champ_names <- unique(wins$school)
+winners <- wncaa %>% 
+  filter(school %in% champ_names)
+```
+
+Now for the boxplots:
+```{r}
+ggplot(winners,
+       aes(reorder(school, seed, na.rm = TRUE), seed)) +
+  geom_boxplot() +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Distributions of tournament seed by school",
+       x = "School",
+       y = "Seed when entering tournament")
+```
+
+Unsurprisingly, UConn and Tennessee usually had one of the lowest (and therefore best) seed when entering the tournament. Baylor and Stanford also often had rather good starting positions. Notably, with the expection of Texas A&M, each of the schools had the no. 1 seed at least once. 
+
+```{r}
+ggplot(winners,
+       aes(reorder(school, seed, na.rm = TRUE), seed)) +
+  geom_violin() +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Distributions of tournament seed by school",
+       x = "School",
+       y = "Seed when entering tournament")
+```
+
+In this case, I found the "violin plot" far more informative (and intuitive). E.g., it makes clear just how often the no. 1 seed was held by either UConn or Tennessee. 
+
+
+# Question 3
+
+```{r}
+ggplot(winners,
+       aes(reorder(school, seed, na.rm = TRUE), seed)) +
+  geom_point() +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Distributions of tournament seed by school",
+       x = "School",
+       y = "Seed when entering tournament")
+```
+
+Because our variable on the y-axis (seed) is spread over a small number of integral numbers, so we'd have to adjust the size of each point to reflect how often the school held a particular seed, making the whole plot cluttered and unappealing. 
+
+
+# Question 4
+
+```{r}
+stats <- winners %>% group_by(school) %>% 
+  summarize_if(is.numeric, funs(mean, sd), na.rm = TRUE) %>% 
+  ungroup()
+
+ggplot(stats,
+       aes(reorder(school, reg_percent_mean), reg_percent_mean)) +
+  geom_point() +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Average win percentage by school",
+       x = "School",
+       y = "Average win percentage in regular season")
+```
+
+The average win percentages vary between slightly below 75% and slightly above 90%. While UConn has the highest average win percentage, Tennessee - despite also being regular tournament winners - are only the 5th best school in this measure. 
+
+```{r}
+ggplot(stats,
+       aes(reorder(school, reg_percent_mean), reg_percent_mean)) +
+  geom_pointrange(
+    mapping = aes(
+      ymin = reg_percent_mean - reg_percent_sd,
+      ymax = reg_percent_mean + reg_percent_sd
+    )
+  ) +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Average win percentage by school",
+       x = "School",
+       y = "Average win percentage in regular season")
+```
+
+Texas A&M seems to be the school with the most consistent win percentages. 
+
+The function "geom_linerange" would create a very similar plot, but without the point marking the mean. 
+
+
+# Question 5
+
+```{r}
+ggplot(winners,
+       aes(reg_percent, full_percent)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Full season vs. regular season performance",
+       x = "Win percentage in regular season",
+       y = "Win percentage including tournament") +
+  geom_abline()
+```
+
+In the rare cases where a team's win record improved after the tournament, the team usually already had a very high win percentage after the regular season. 
+
+
+# Question 6
+
+```{r}
+winners <- winners %>% 
+  mutate(ischamp = if_else(tourney_finish == "Champ", 1, 0),
+         ischamp = as.factor(ischamp))
+
+ggplot(winners,
+       aes(reg_percent, full_percent,
+           color = ischamp)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Full season vs. regular season performance",
+       x = "Win percentage in regular season",
+       y = "Win percentage including tournament",
+       col = "Champion") +
+  geom_abline()
+```
+
+By definition, the champions always improved their win percentage when including the tournament. With few exceptions, they were the only teams to do so. In a few cases, a team with a below-average win percentage won the tournament in the end.
+
+Leaving the variable "is_champ" as an integer makes ggplot use a color spectrum to visualize this binary variable in plot - not gamebreaking, but not really useful.
+
+
+# Question 7
+
+```{r}
+winners <- winners %>% 
+  mutate(plotlabel = paste(school, year, sep = "."),
+         difference = full_percent - reg_percent)
+```
+
+First, let's see which school - and when - made it into the tournament after a pretty bad regular season. 
+
+```{r}
+winners$plotlabel[which.min(winners$reg_percent)]
+```
+
+That was Notre Dame in 1992.
+Now, for the overperformer:
+
+```{r}
+winners$plotlabel[which.max(winners$difference)]
+```
+
+This would be Tennessee in 1997. 
+Let's see what school was the second-highest overperformer:
+
+```{r}
+winners$plotlabel[head(order(winners$difference, decreasing = TRUE))] 
+```
+
+Turns out: Also Tennessee, ten years earlier in 1987. 
+
+
+# Question 8
+
+Let's find out which teams have gone unbeaten in both tournament and regular season:
+
+```{r}
+unbeaten <- winners %>%
+  filter(full_l == 0)
+unbeaten$plotlabel
+```
+
+It's not very surprising that UConn, the most frequent champions, have also gone unbeaten the most times, six in total. 
+
+
+
+
+
+
+
+
+
