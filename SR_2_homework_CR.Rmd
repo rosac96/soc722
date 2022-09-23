@@ -1,0 +1,192 @@
+---
+title: "Homework_SR_2_CR"
+author: "Christoph Rosa"
+date: "2022-09-23"
+output: html_document
+---
+
+# Easy problems
+
+## 2E1:
+Answer 2: Pr(rain|Monday) is the probability of rain on Monday.
+
+
+## 2E2:
+Answer 3: The probability that it is Monday, given that it is raining, is Pr(Monday|rain).
+
+
+## 2E3:
+Answer 1: Again, Pr(Monday|rain).
+
+
+## 2E4:
+
+Saying "the probability of water is 0.7" means that 70% of our model globe's surface is water, therefore, given our measurement technique, the probability of the result being "water" is 0.7. 
+The actual proportion of water on the surface is, of course, unknown to us (limited knowledge)
+
+
+
+# Medium Problems
+
+Let's start with loading our packages:
+```{r}
+library(tidyverse)
+library(patchwork)
+```
+
+
+## 2M1:
+
+First, I defined the grid and the prior, so I can easily tweak them (e.g., for the next exercise).
+```{r}
+grid <- seq(0, 1, length.out = 20)
+prior <- rep(1, 20)
+```
+
+
+Then, we compute the approximation and create a plot for Case 1 (W, W, W). 
+```{r}
+p1 <- tibble(grid, prior) %>% 
+  mutate(likelihood = dbinom(3, 3, grid)) %>% 
+  mutate(unpost = likelihood * prior) %>% 
+  mutate(post = unpost / sum(unpost)) %>% 
+  ggplot(aes(x = grid, y = post)) +
+  geom_point() +
+  geom_line() +
+  labs(subtitle = "Case 1 (3W)",
+       x = "Probability of water",
+       y = "Posterior probability") +
+  theme_minimal()
+```
+
+Now, we repeat this process for the other two cases:
+```{r}
+p2 <- tibble(grid, prior) %>% 
+  mutate(likelihood = dbinom(3, 4, grid)) %>% 
+  mutate(unpost = likelihood * prior) %>% 
+  mutate(post = unpost / sum(unpost)) %>% 
+  ggplot(aes(x = grid, y = post)) +
+  geom_point() +
+  geom_line() +
+  labs(subtitle = "Case 2 (3W, 1L)",
+       x = "Probability of water",
+       y = "Posterior probability") +
+  theme_minimal()
+
+p3 <- tibble(grid, prior) %>% 
+  mutate(likelihood = dbinom(5, 7, grid)) %>% 
+  mutate(unpost = likelihood * prior) %>% 
+  mutate(post = unpost / sum(unpost)) %>% 
+  ggplot(aes(x = grid, y = post)) +
+  geom_point() +
+  geom_line() +
+  labs(subtitle = "Case 1 (5W, 2L)",
+       x = "Probability of water",
+       y = "Posterior probability") +
+  theme_minimal()
+```
+
+Finally, let's plot all three cases together so we can compare them:
+```{r}
+p1 + p2 + p3
+```
+
+
+## 2M2:
+
+Let's recreate the grid approximations with a step prior:
+```{r}
+prior <- if_else(grid < .5, 0, 1)
+
+p1 <- tibble(grid, prior) %>% 
+  mutate(likelihood = dbinom(3, 3, grid)) %>% 
+  mutate(unpost = likelihood * prior) %>% 
+  mutate(post = unpost / sum(unpost)) %>% 
+  ggplot(aes(x = grid, y = post)) +
+  geom_point() +
+  geom_line() +
+  labs(subtitle = "Case 1 (3W)",
+       x = "Probability of water",
+       y = "Posterior probability") +
+  theme_minimal()
+
+p2 <- tibble(grid, prior) %>% 
+  mutate(likelihood = dbinom(3, 4, grid)) %>% 
+  mutate(unpost = likelihood * prior) %>% 
+  mutate(post = unpost / sum(unpost)) %>% 
+  ggplot(aes(x = grid, y = post)) +
+  geom_point() +
+  geom_line() +
+  labs(subtitle = "Case 2 (3W, 1L)",
+       x = "Probability of water",
+       y = "Posterior probability") +
+  theme_minimal()
+
+p3 <- tibble(grid, prior) %>% 
+  mutate(likelihood = dbinom(5, 7, grid)) %>% 
+  mutate(unpost = likelihood * prior) %>% 
+  mutate(post = unpost / sum(unpost)) %>% 
+  ggplot(aes(x = grid, y = post)) +
+  geom_point() +
+  geom_line() +
+  labs(subtitle = "Case 1 (5W, 2L)",
+       x = "Probability of water",
+       y = "Posterior probability") +
+  theme_minimal()
+
+p1 + p2 + p3
+```
+
+
+## 2M3:
+
+Here, the parameter (proportion of land) has only two values, 0.3 for Earth and 1 for Mars. As both globes are equally likely, the prior can be defined as "flat". From here, we can easily calculate the (standardized) posterior probability of the globe being Earth after getting "land" on our single observation:
+```{r}
+tibble(parameter = c(.3, 1), prior = c(1, 1)) %>% 
+  mutate(likelihood = dbinom(1, 1, parameter)) %>% 
+  mutate(unstd_posterior = likelihood * prior) %>% 
+  mutate(posterior = unstd_posterior / sum(unstd_posterior))
+```
+
+This shows that the probability is 0.231. 
+
+
+## 2M4:
+
+Card 1 (both sides black) has 2 ways of producing the result. Card 2 (black/white) has 1 way, Card 3 (both white) has zero ways. 
+Since all the cards are equally plausible to be drawn (the prior is the same for all of them), we can calculate the probability by simply diving the counts by the sum of all possible ways.
+So, the probability that we drew Card 1 (where the other side is black as well) is:
+2 / (2 + 1 + 0) = 2/3
+
+
+## 2M5:
+
+This basically changes our prior, the card being double-black is now twice as high. Ergo, the new counts for the cards are:
+Card 1 (B/B): 2 x 2 = 4,
+Card 2 (B/W): 1 x 1 = 1,
+Card 3 (W/W): 0 x 1 = 0.
+There are now four ways for the other side to be black as well, and we have to update our divisor as well.
+The probability is now:
+4 / (4 + 1 + 0) = 4/5 
+
+
+## 2M6:
+
+Again, we can simply adjust our plausibilities by including the new data:
+Card 1 (B/B): 2 x 1 = 2,
+Card 2 (B/W): 1 x 2 = 2,
+Card 3 (W/W): 0 x 3 = 0.
+Now, the probability of the other side being black is:
+2 / (2 + 2 + 0) = 0.5
+
+
+## 2M7:
+
+To include our new information, we have to count the no. of ways for the 2nd card to show a white side, depending on the first card. There are 3 ways (= sides) for first drawing B/B and 2 ways for having drawn B/W. Now, our updated counts are:
+
+First card being B/B: 2 x 3 = 6
+First card B/w: 1 x 2 = 2
+There is still now ways how drawing the W/W card first could produce our observed.
+So, the new probability is:
+6 / (6 + 2) = 6/8 = 0.75
+
