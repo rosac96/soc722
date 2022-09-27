@@ -1,0 +1,232 @@
+---
+title: "SR_3_homework_CR"
+author: "Christoph Rosa"
+date: "2022-09-27"
+output: html_document
+---
+
+# Easy 
+
+## Loading packages and data
+
+First, packages:
+```{r}
+library(tidyverse)
+library(rethinking)
+```
+
+And the data given by the book:
+```{r}
+p_grid <- seq(from=0, to=1, length.out=1000)
+prior <- rep( 1, 1000)
+likelihood <- dbinom(6, size=9, prob=p_grid)
+posterior <- likelihood * prior
+posterior <- posterior/sum(posterior) 
+
+set.seed(100)
+samples <- sample(p_grid, prob=posterior, size=1e4, replace=TRUE) 
+```
+
+## Easy 1
+
+```{r}
+options(scipen = 999) # stop R from using scientific notation
+sum(samples < 0.2)/length(samples)
+```
+
+Only 0.04% of the posterior probability lies below p = 0.2. 
+
+
+## Easy 2
+```{r}
+sum(samples > 0.8)/length(samples)
+```
+
+About 11.2% of the posterior probability lies above p = 0.8.
+
+
+## Easy 3
+
+```{r}
+sum(samples > 0.2 & samples < 0.8)/length(samples)
+```
+
+88.8% of the posterior probability lies between p = 0.2 and p = 0.8. 
+
+
+## Easy 4
+
+```{r}
+quantile(samples, 0.2)
+```
+
+20% of the posterior probability lies below p = 0.52. 
+
+
+## Easy 5
+
+```{r}
+quantile(samples, 0.8)
+```
+
+20% of the posterior probability lies above p = 0.76. 
+
+
+## Easy 6
+
+```{r}
+rethinking::HPDI(samples, prob = .66)
+```
+
+The values p = 0.51 and p = 0.77 contain the narrowest interval equal to 66% of the posterior probability.
+
+
+## Easy 7
+
+```{r}
+PI(samples, prob = 0.66)
+```
+
+The 66% percentile compatibility interval lies between p = 0.50 and p = 0.77. 
+
+
+# Medium 
+
+## Medium 1
+
+Calculating grid approximation analogous to Chapter 2:
+```{r}
+grid <- seq(0, 1, length.out = 1000)
+prior <- rep(1, 1000)
+
+d1 <- tibble(grid, prior) %>% 
+  mutate(likelihood = dbinom(8, 15, grid)) %>% 
+  mutate(unpost = likelihood * prior) %>% 
+  mutate(post = unpost / sum(unpost))
+
+d1 %>% ggplot(aes(x = grid, y = post)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "M1: Grid approximation",
+       x = "Probability of water",
+       y = "Posterior probability") +
+  theme_minimal()
+```
+
+
+## Medium 2
+
+Now, we draw 10k samples:
+```{r}
+set.seed(100)
+samples2 <- d1 %>% slice_sample(n = 1e4, weight_by = post, replace = TRUE) 
+
+rethinking::HPDI(samples2$grid, prob = .9)
+```
+
+The narrowest interval equal to 90% of the posterior probability lies between p = 0.33 and p = 0.72. 
+
+
+## Medium 3
+
+Let's generate 10k simulations of 15 globe tosses:
+```{r}
+w <- rbinom(1e4, size = 15, prob = samples2$grid)
+
+sum(w == 8)/length(w)
+```
+
+The probability of observing 8 waters in 15 tosses is 14.6%. 
+
+
+## Medium 4
+
+```{r}
+w2 <- rbinom(1e4, size = 9, prob = samples2$grid)
+sum(w2 == 6)/length(w2)
+```
+
+The probability of observing 6 waters in 9 tosses is 17.6%.
+
+
+## Medium 5
+
+First, our new grid approximation:
+```{r}
+prior2 <- if_else(grid < .5, 0, 1)
+
+d2 <- tibble(grid, prior2) %>% 
+  mutate(likelihood = dbinom(8, 15, grid)) %>% 
+  mutate(unpost = likelihood * prior2) %>% 
+  mutate(post = unpost / sum(unpost))
+
+d2 %>% ggplot(aes(x = grid, y = post)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "M5: Grid approximation with updated prior",
+       x = "Probability of water",
+       y = "Posterior probability") +
+  theme_minimal()
+```
+
+Next, the 90% HDPI: 
+```{r}
+samples3 <- d2 %>% slice_sample(n = 1e4, weight_by = post, replace = TRUE) 
+
+rethinking::HPDI(samples3$grid, prob = .3)
+```
+
+Here, the HDPI lies between p = 0.51 and p = 0.57 - a much narrower interval compared to when we used a flat prior.
+
+```{r}
+w3 <- rbinom(1e4, size = 15, prob = samples3$grid)
+sum(w3 == 8)/length(w3)
+
+w4 <- rbinom(1e4, size = 9, prob = samples3$grid)
+sum(w4 == 6)/length(w4)
+```
+
+The updated probability for 8 waters out of 15 tosses is 15.8% (instead of 14.6%), for 6 waters out of 9 tosses it is 23.2 (instead of 17.6%). Both probabilities increased significantly, as the new prior lowered the probability of getting few "waters". 
+
+Let's compare this to the true value of p = 0.7:
+```{r}
+w5 <- rbinom(1e4, size = 15, prob = 0.7)
+sum(w5 == 8)/length(w5)
+
+w6 <- rbinom(1e4, size = 9, prob = 0.7)
+sum(w6 == 6)/length(w6)
+```
+
+Interestingly, the new prior made our predictions of 8/15 waters even worse, although the flat prior wasn't much better - the actual probability is 8.3%.
+On the contrary, the predictions for 6/9 waters became better with the updated prior, closer to the "true" value of 26.9% (but still quite far off).
+
+
+## Medium 6
+
+I'm unfamiliar with loops and can't think of a better/more efficient way to solve this problem then through simple trial-and-error, so here goes: 
+```{r}
+tosses = 2200
+waters = tosses*0.7
+
+d3 <- tibble(grid, prior) %>% 
+  mutate(likelihood = dbinom(waters, tosses, grid)) %>% 
+  mutate(unpost = likelihood * prior) %>% 
+  mutate(post = unpost / sum(unpost))
+
+samples <- d3 %>% slice_sample(n = 1e4, weight_by = post, replace = TRUE) 
+
+pi <- PI(samples$grid, prob = .99)
+pi 
+pi[2]-pi[1]
+```
+
+One would need to toss the globe approximately a hand-breaking 2,200 times to get an estimate for p with a 99% percentile interval that's only 0.05 wide. 
+
+
+
+
+
+
+
+
+
