@@ -1,0 +1,342 @@
+---
+title: "SR_4_homework_CR"
+author: "Christoph Rosa"
+date: "2022-09-28"
+output: html_document
+---
+
+# Easy Questions
+
+## Easy 1
+
+The first of the lines is the likelihood:
+
+$$y_{i} \sim \text{Normal}(\mu, \sigma)$$
+
+
+## Easy 2
+
+There are two parameters in the posterior probability (mean and std. dev.).
+
+
+## Easy 3
+
+According to p. 84 the theorem form should look like this:
+
+$$Pr(\mu, \sigma | y) =\frac{\prod_{i}Normal(y_{i}|\mu, \sigma)Normal(\mu|0, 10)Exponential(\sigma|1)}{\int\int\prod_{i}Normal(y_{i}|\mu, \sigma)Normal(\mu|0, 10)Exponential(\sigma|1)\;d\mu\;d\sigma}$$
+
+
+## Easy 4
+
+That would be line no. 2:
+
+$$\mu_{i} = \alpha + \beta x_{i}$$
+
+
+## Easy 5
+
+In this model there are three parameters.
+
+
+# Medium Questions 
+
+## Packages & Set-up
+
+Loading packages and setting-up working environment:
+```{r}
+library(tidyverse)
+library(rethinking)
+library(tidybayes)
+library(tidybayes.rethinking)
+library(splines)
+set.seed(100)
+```
+
+
+## Medium 1
+
+Simulating observed y values from the prior:
+```{r}
+n <- 1e4 # sample size
+
+# simulating y values
+sim <- 
+  tibble(sample_mu  = rnorm(n, mean = 0, sd = 10),
+         sample_sig = rexp(n, rate = 1)) %>% 
+  mutate(y = rnorm(n, mean=sample_mu, sd = sample_sig))
+
+# and plotting them
+p <- sim %>% 
+  ggplot(aes(x = y)) +
+  geom_density() +
+  labs(title = "Y values from prior",
+       x = "y values",
+       y = "") +
+  theme_minimal()
+
+p
+```
+
+
+## Medium 2
+
+The model as a quap formula:
+
+  y ~ dnorm(mu, sigma)
+  
+  mu ~ dnorm(0, 10)
+  
+  sigma ~ dexp(1)
+
+
+## Medium 3
+
+And the quap model given as a mathematical model:
+
+$$y _{i} \sim Normal(\mu_{i}, \sigma)$$
+$$\mu_{i} = \alpha + \beta x_{i}$$
+$$\alpha \sim Normal(0,10)$$
+$$\beta \sim Uniform(0,1)$$
+$$\sigma \sim Exponential(1)$$
+
+
+## Medium 4
+
+The likelihood for our height model:
+$$h_{i} \sim Normal(\mu_{i}, \sigma)$$
+And the linear model:
+$$\mu_{i} = \alpha + \beta year_{i}$$
+For our intercept prior I chose a normal distribution:
+$$\alpha \sim Normal(150, 20)$$
+
+Since height should increase with age, I choose a Log-Normal prior distribution for $\beta$:
+$$\beta \sim \text{Log-Normal}(0,1)$$
+And finally, the prior for the standard deviation:
+$$\sigma \sim Uniform(0, 25)$$
+
+
+## Medium 5
+
+No, see the above explanation for the prior of $\beta$. 
+
+
+## Medium 6
+
+This would mean that our standard deviation can't be higher than 8, the square root of 64. Our prior for the intercept $\alpha$ should then be changed to something like:
+$$\alpha \sim Normal(150, 8)$$
+
+
+## Medium 7
+
+Let's start by recreating the model "m4.3":
+
+```{r}
+data(Howell1)
+d <- Howell1
+d2 <- d %>% filter(age >= 18)
+
+xbar <- mean(d2$weight)
+
+m4.3 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b*(weight - xbar),
+    a ~ dnorm(178, 20),
+    b ~ dlnorm(0, 1),
+    sigma ~ dunif(0, 50)
+  ), data = d2
+) 
+
+precis(m4.3)
+```
+
+Now, a version without the mean weight "xbar":
+```{r}
+m4.3x <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b*weight,
+    a ~ dnorm(178, 20),
+    b ~ dlnorm(0, 1),
+    sigma ~ dunif(0,50)
+  ), data = d2
+)
+
+precis(m4.3x)
+```
+
+At a first glance, the mean for our intercept alpha is far lower (ca. 40 cm), it also has a higher standard deviation. The slope beta remains largely unchanged, the standard deviation sigma is, of course, the same. 
+
+Now, let's compare the variance-covariance matrices: 
+```{r}
+options(scipen = 100) # disable scientific notation to make them more interpretable
+vcov(m4.3)
+vcov(m4.3x)
+```
+As noted before, only the variance of alpha has changed noticeably. However, this also shows that in our new model all parameter-pairs have higher covariances. As noted at the end of 4.4.3.1, this is because we don't center the weight anymore. 
+
+Now we compare the posterior predictions for the two models. We start by sampling from both models:
+```{r}
+draws <- tidy_draws(m4.3, n = 100)
+drawsx <- tidy_draws(m4.3x, n = 100)
+```
+
+In my opinion, the clearest (and most efficient) way to compare the posterior predictions is to plot the densities of the parameters against each other, especially the slope $beta$:
+```{r}
+ggplot() +
+  geom_density(aes(b, fill = "m4.3"), alpha = .2, data = draws) +
+  geom_density(aes(b, fill = "new model"), alpha = .2, data = drawsx) +
+  labs(title = "Posterior predictions of slope beta",
+       fill = "Model") +
+  theme_minimal()
+```
+
+But, since most people on the discussion board interpreted McElreath's absurdly vague instructions differently, I will follow suite and compare the two models by plotting their posterior estimates over the original data:
+```{r}
+p <- ggplot(draws) +
+  geom_abline(aes(intercept = a,
+                  slope = b),
+              alpha = .2) +
+  geom_point(
+    data = d2,
+    mapping = aes(y = height,
+                  x = weight-xbar),
+    alpha = .2) +
+  labs(y = "height in cm",
+       x = "weight - mean(weight) in kg",
+       title = "Posterior estimates and original data")
+
+p
+
+px <- ggplot(drawsx) +
+  geom_abline(aes(intercept = a,
+                  slope = b),
+              alpha = .2) +
+  geom_point(
+    data = d2,
+    mapping = aes(y = height,
+                  x = weight),
+    alpha = .2) +
+  labs(y = "height in cm",
+       x = "weight in kg",
+       title = "Posterior estimates and original data")
+
+px
+```
+
+One could overlay the ribbons for the HDPIntervalls in these plots, but the question doesn't ask for them and the main insight from this comparison is that the slopes don't really change much between the models. 
+
+
+## Medium 8
+
+I'll start by recreating the original spline with 15 knots:
+
+```{r}
+# load the data
+data(cherry_blossoms)
+d <- cherry_blossoms %>% drop_na(doy)
+
+# create the knots
+num_knots <- 15
+knot_list <- quantile(d$year, probs = seq(from = 0, to = 1, length.out = num_knots))
+
+# construct the basis functions
+B <- bs(d$year,
+        knots = knot_list[-c(1, num_knots)], 
+        degree = 3, 
+        intercept = TRUE)
+
+# build the model
+m4.7 <- quap(
+  alist(
+    D ~ dnorm(mu, sigma),
+    mu <- a + B %*% w,
+    a ~ dnorm(100, 10),
+    w ~ dnorm(0, 10),
+    sigma ~ dexp(1)
+  ), data = list(D = d$doy, B = B),
+  start = list(w = rep(0, ncol(B)))
+)
+
+# estimate posterior predictions
+post <- extract.samples(m4.7)
+w <- apply(post$w, 2, mean)
+
+# and the final spline
+mu <- link(m4.7)
+mu_PI <- apply(mu, 2, PI, 0.97)
+plot(d$year, d$doy, col = col.alpha(rangi2, 0.3), pch = 16,
+     xlab = "year", ylab = "day of year", main = "Spline with 15 knots")
+shade(mu_PI, d$year, col = col.alpha("black", 0.5))
+```
+
+Now we repeat the process with double the knots:
+```{r}
+num_knots <- 30
+knot_list <- quantile(d$year, probs = seq(from = 0, to = 1, length.out = num_knots))
+
+B <- bs(d$year,
+        knots = knot_list[-c(1, num_knots)], 
+        degree = 3, 
+        intercept = TRUE)
+
+m4.7 <- quap(
+  alist(
+    D ~ dnorm(mu, sigma),
+    mu <- a + B %*% w,
+    a ~ dnorm(100, 10),
+    w ~ dnorm(0, 10),
+    sigma ~ dexp(1)
+  ), data = list(D = d$doy, B = B),
+  start = list(w = rep(0, ncol(B)))
+)
+
+post <- extract.samples(m4.7)
+w <- apply(post$w, 2, mean)
+
+mu <- link(m4.7)
+mu_PI <- apply(mu, 2, PI, 0.97)
+plot(d$year, d$doy, col = col.alpha(rangi2, 0.3), pch = 16,
+     xlab = "year", ylab = "day of year", main = "Spline with 30 knots")
+shade(mu_PI, d$year, col = col.alpha("black", 0.5))
+```
+
+The spline becomes more "wriggly", but, at this point, without revealing much new information or showing any new trends. The spline now fits the original data "better", but this doesn't really give us more insights here.
+
+Now with a wider prior on the weights:
+```{r}
+num_knots <- 30
+knot_list <- quantile(d$year, probs = seq(from = 0, to = 1, length.out = num_knots))
+
+B <- bs(d$year,
+        knots = knot_list[-c(1, num_knots)], 
+        degree = 3, 
+        intercept = TRUE)
+
+m4.7 <- quap(
+  alist(
+    D ~ dnorm(mu, sigma),
+    mu <- a + B %*% w,
+    a ~ dnorm(100, 10),
+    w ~ dnorm(0, 10),
+    sigma ~ dexp(100)
+  ), data = list(D = d$doy, B = B),
+  start = list(w = rep(0, ncol(B)))
+)
+
+post <- extract.samples(m4.7)
+w <- apply(post$w, 2, mean)
+
+mu <- link(m4.7)
+mu_PI <- apply(mu, 2, PI, 0.97)
+plot(d$year, d$doy, col = col.alpha(rangi2, 0.3), pch = 16,
+     xlab = "year", ylab = "day of year", main = "Spline with 30 knots")
+shade(mu_PI, d$year, col = col.alpha("black", 0.5))
+```
+
+A wider prior leads to a more "narrow" spline which, again, makes it match our original data better. In this case, it also helps making existing trends more easily visible.
+
+
+
+
+
