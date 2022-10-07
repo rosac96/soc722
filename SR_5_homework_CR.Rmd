@@ -1,0 +1,166 @@
+---
+title: "SR_5_homework"
+author: "Christoph Rosa"
+date: "2022-10-06"
+output: html_document
+---
+
+# Easy Questions
+
+## Question 1
+
+Models 2 and 4 are. 
+
+
+## Question 2
+
+$$A = Normal(\mu, \sigma)$$
+$$\mu_{i} = \alpha + \beta_{L}L_{i} + \beta_{P}P_{i}$$
+
+## Question 3
+
+$$t = Normal(\mu, \sigma)$$
+
+$$\mu_{i} = \alpha + \beta_{F}F_{i} + \beta_{S}S_{i}$$
+Since the two variables are "positively" associated, both the slope for funding $\beta_{F}$ and the slope for laboratory size $\beta_{S}$ shoulb be positive. Although this doesn't make too much sense for me, as this would mean students in a large, well-funded lab need **longer** to receive their PhDs. 
+
+
+## Question 4
+
+All models except Model 2 are inferentially equivalent.
+
+
+# Medium Questions
+
+## Question 1
+
+The presence of a Metro system is positively correlated with the Democratic share of the vote of an electoral district. This is not due to the enlightening experience of a riding the subway making people more liberal. Instead, Metros are only present in urban areas, which consistently vote Democratic as they attract both young, college-educated professionals and racial/ethnic minorities. 
+
+
+## Question 2
+
+A district's average income is a negatively correlated predictor variable for the Democratic share of the vote. On the other hand, a district being urban is a positively correlated predictor variable for it. At the same time, urban districts tend to have a higher average income.
+
+
+## Question 3
+
+I could imagine that re-marriages after divorces are a mechanism by which high divorce rates cause high marriage rates. Someone who is divorced 3 times and lives in a State that highly values marriage got probably married 4 times in their life. 
+Establishing this causality with a multiple regression is hard. Simply making divorce rate a predictor variable and marriage rate the variable of interest won't tell us much about their causal relationship. Having data on the average number of marriages per person would insightful in this context.
+
+
+## Question 4
+
+I found data on the State's LDS population on https://worldpopulationreview.com/state-rankings/mormon-population-by-state. 
+```{r}
+# packages 
+library(tidyverse)
+library(rethinking)
+library(tidybayes)
+library(tidybayes.rethinking)
+
+# divorce data
+data(WaffleDivorce, package = "rethinking")
+d <- WaffleDivorce
+
+# standardize variables
+d <-
+  d %>% 
+  mutate(D = rethinking::standardize(Divorce),
+         M = rethinking::standardize(Marriage),
+         A = rethinking::standardize(MedianAgeMarriage))
+
+# get data on LDS population
+dLDS <- read.csv("Data/LDS_data.csv")
+
+dLDS <-
+  dLDS %>% 
+  mutate(lds = mormonRate*100) %>% 
+  mutate(Location = State) %>% 
+  select(Location, lds)
+glimpse(dLDS)
+
+# join the data
+d <- inner_join(d, dLDS, by = "Location")
+```
+
+When we look at the LDS population by state, it's obvious (and not surprising) that it is heavily right-skewed. Therefore, it makes sense to work with the log of this variable (and, of course, also standardize it).
+
+```{r}
+ggplot(d, aes(x = lds)) +
+  geom_histogram() +
+  theme_minimal() +
+  labs(title = "LDS-population by State",
+       x = "% LDS",
+       y = "Counts")
+
+d <-
+  d %>% 
+  mutate(lds = log(lds)) %>% 
+  mutate(lds = rethinking::standardize(lds))
+```
+
+Now, we can build our model:
+```{r}
+flist <- 
+  alist(
+    D ~ dnorm(mu, sigma),
+    mu <- a + bM*M + bA*A + bL*lds,
+    a ~ dnorm(0, .2),
+    bM ~ dnorm(0, .5),
+    bA ~ dnorm(0, .5),
+    bL ~ dnorm(0, .5),
+    sigma ~ dexp(1)
+  )
+
+fit <- quap(flist,
+            data = d)
+
+precis(fit)
+```
+
+Let's plot our three predictor variables:
+
+```{r}
+# drawing samples
+post <- tidy_draws(fit, n = 1e4) %>% 
+  select(a:sigma)
+
+# "pivot, pivoooot" ~ Ross
+longpost <- post %>% 
+  pivot_longer(everything(),
+               names_to = "term",
+               values_to = "values")
+
+# and plot the parameters:
+ggplot(longpost,
+       aes(x = values)) +
+  geom_histogram(color = "white",
+                 binwidth = .05,
+                 boundary = 0) +
+  facet_grid(rows = vars(term),
+             switch = "y") +
+  geom_vline(xintercept = 0,
+             color = "gray") +
+  scale_y_continuous(breaks = NULL) +
+  xlim(-1.25, 1.25) +
+  labs(title = "Parameter values for predicting divorce rate",
+       y = "",
+       x = "Values") +
+  theme_minimal()
+```
+
+
+## Question 5
+
+I would suggest a model with the main predictor variable "price of gasoline" and controls such as average income, population age and education level (all are known to influence obesity prevalence). I would then include two predictor variables for the two suggested mechanisms, for example the weekly visitors at/revenues of fast food establishments (since obesity is often related to consumption of highly-processed foods) and, say, survey data on how many miles people walk/run/bike in an average week. 
+The question then is, are these variables correlated with obesity rates? Does including one (or both) of them cause gasoline prices to lose their predictive power?
+
+
+
+
+
+
+
+
+
+
