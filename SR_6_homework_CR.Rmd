@@ -1,0 +1,117 @@
+---
+title: "SR_6_homework_CR"
+author: "Christoph Rosa"
+date: "2022-10-14"
+output: html_document
+---
+
+# Easy Questions
+
+## Question 1
+
+Omitted variable bias, post-treatment bias, and collider bias can lead to false inferences about causal relationships.
+
+
+## Question 2
+
+This chapter made me realize how often I must have fallen victim to post-treatment bias in the past. 
+
+Part of my BA thesis was a regression analysis that looked into correlations between voting districts' demographics and the ideological position of their congressional representatives. I was mostly looking into how education (% of college-educated voters) and occupation (% of working-class employees) affect legislator ideology. In my regression models, I controlled for average income, missing the fact that income is most probably a path through which occupation and education indirectly affect voting behavior (and therefore the stances of elected representatives). 
+
+
+## Question 3
+
+The "fork", where X and Y are independent from each other, conditional on Z.
+
+The "pipe", where Z serves as a mediator for the relationship between X and Y, so conditioning on Z would erase their relation. 
+
+The "collider", where X and Y are independent from each other but both influence Z, so conditioning on that middle variable reveals the "path" between them. 
+
+The "descendant", a sort-of proxy variable D that contains information on its "parent" variable Z. Conditioning on D has an effect that depends on the role of Z (e.g., as a collider or a mediator in a pipe); this effect will be smaller than when conditioning directly on the parent variable Z. 
+
+
+## Question 4
+
+Conditioning on a variable is somewhat like creating sub-samples of our (so far unbiased) sample. These sub-samples can be biased and therefore showcase correlations that do not represent any causal relatinoship.
+
+If we think about the examples in the beginning of the chapter, conditioning on a collider variable such as "has been published" (influenced by both newsworthiness and trustworthiness), we create sub-samples of the data: One with published articles, one with rejected ones. Inside each of them we can detect a collinearity, even though newsworthiness and trustworthiness aren't causally related. 
+
+
+
+# Medium Questions
+
+## Question 1
+
+Here is the DAG:
+```{r}
+library(tidyverse)
+library(dagitty)
+library(rethinking)
+
+m1 <- dagitty(
+"dag {
+A -> C
+A -> U
+C -> B
+C -> Y
+U -> B
+U -> X
+V -> C
+V -> Y
+X -> Y
+}")
+
+drawdag(m1)
+```
+
+This new graph includes two additional paths from X to Y, as each of the two original paths (p. 186) now comes with an alternative version where the ending segment C -> Y is replaced by C <- V -> Y. 
+
+The one of these two new paths that doesn't run through the collider variable B needs to be closed.
+
+As V isn't another collider, but adds yet another fork, we can block it by simply conditioning on the new variable V. 
+
+
+## Medium 2
+
+Let's simulate data where X and Z are strongly correlated:
+```{r}
+# simulating data for X, Y, and Z
+set.seed(123)
+d <- tibble(x = rnorm(100, 0, 1),
+            z = rnorm(100, x, 0.001),
+            y = rnorm(100, z, 1))
+
+# and estimate our model
+m <- quap(
+  alist(
+    y ~ dnorm(mu, sigma),
+    mu <- a + b1 * x + b2 * z,
+    a ~ dnorm(0, 1),
+    b1 ~ dnorm(0, 1),
+    b2 ~ dnorm(0, 1),
+    sigma ~ dexp(1)
+  ),
+data = d
+)
+
+precis(m)
+
+plot(precis(m))
+
+```
+
+
+
+## Medium 3
+
+Top left: Condition on A and Z.
+
+Top right: Condition on A. 
+
+Bottom left: None. 
+
+Bottom right: Condition on A. 
+
+
+
+
