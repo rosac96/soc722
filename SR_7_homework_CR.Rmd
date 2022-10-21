@@ -1,0 +1,104 @@
+---
+title: "SR_7_homework_CR"
+author: "Christoph Rosa"
+date: "2022-10-21"
+output: html_document
+---
+
+# Easy Questions
+
+## Questions 1
+
+Information entropy is a function that measures uncertainty; it requires three criteria to be met:
+
+1. It must be continuous. 
+
+2. It must increase with the number of possible events. 
+
+3. It must be additive; when combining different categories of events with individual uncertainties, it is the sum of these uncertainties. 
+
+
+## Question 2
+
+If the probability of heads and tails are 70% and 30%, we can calculate the entropy of the coin as follows:
+
+```{r}
+p <- c(.3, .7)
+-sum(p*log(p))
+```
+
+
+## Question 3
+
+Same as above:
+```{r}
+p <- c(.2, .25, .25, .30)
+-sum(p*log(p))
+```
+
+
+## Question 4
+
+Since side 4 is not a "possible event", the entropy is simply:
+```{r}
+p <- c(1/3, 1/3, 1/3)
+-sum(p*log(p))
+```
+
+
+
+# Medium Questions
+
+## Question 1
+
+The AIC is an estimate of the average out-of-sample deviance that includes a "penalty" for the number of free parameters in the posterior distribution. Is is only reliable when (a) the priors are flat or overwhelmed by the likelihood, (b) the posterior distribution is approximately multivariate Gaussian, and (c) the sample size is far greater than the number of parameters. 
+
+The WAIC is an estimate of the out-of-sample deviance that, in a large sample, converges to the cross-validation approximation. It makes no assumption of the posterior distribution and doesn't require flat (or "overwhelmed") priors and is therefore more general than the AIC (see b above).  
+
+To transform WAIC into AIC, we need to meet the assumption that the priors are flat and the posterior distribution is more or less multivariate Gaussian. 
+
+
+## Question 2
+
+"Model selection" uses regularizing priors and information criteria to select the "best" model (lowest criterion) and discard the other models.
+
+"Model comparison" is a more general approach. It uses multiple models together with a causal model to infer causality, based on the influences and conditional independencies of different variables. 
+
+Compared to model comparison, model selection doesn't use the information about relative model accuracy that the differences among information criteria (WAIC/CV/PSIS) give us. These differences can tell us how confident we should be in the different models we are comparing. 
+
+
+## Question 3
+
+The problem here is that the number of observations affects the out-of-sample deviance calculated by the ICs. As the plots on p. 224 show, the deviance increases with the sample size for models with few parameters and decreases when sample size increases if the model is more complex. 
+
+As mentioned on p. 221, WAIC and CV tend to prefer models with more parameters when using larger samples.
+
+The suggestion to experiment with different sample sizes sounds good, but that's something I'll have to do in my leisure time this weekend.
+
+
+## Question 4
+
+The tighter the priors become (if that is what is meant by "concentrated"), the smaller the out-of-sample deviance becomes; although this effect is barely noticeable for larger sample sizes. 
+
+This is especially true for more complex (more parameters) models: more narrow (more "sceptical") priors reduce the negative impact of overfitting. 
+
+Again, experiment with this is a good suggestion that I'll get to over the weekend.
+
+
+## Question 5
+
+An informal explanation of why informative priors reduce overfitting:
+
+I like how Mackelreath says that flat priors make our golems to "excited" about the data they are learning from when fitting a model. If basically all values are equally likely, the model will react too much to every single data point it is learning from. In other words, it is overfitting to the data. Informative priors, by telling the model that many values are rather unlikely, make the model less likely to learn "too much" from them. 
+
+
+## Question 6
+
+An informal explanation of why overly informative priors result in underfitting:
+
+Vice versa to the answer above: If the priors are too restrictive, they don't really let the model learn from the data we give it. It will potentially miss patterns in the data it would otherwise pick up on because our overly informative priors tell it that these values are too unlikely to be worth considering. 
+
+
+
+
+
