@@ -1,0 +1,171 @@
+---
+title: "SR_8_homework_CR"
+author: "Christoph Rosa"
+date: "2022-10-28"
+output: html_document
+---
+
+# Easy questions
+
+## Question 1
+
+1) How yeast makes bread dough rise depends on *temperature*.
+
+2) How education affects to income depends on *gender*, *field of study*, *country of residence*, etc.
+
+3) How far/fast gasoline makes a car go depends on whether it is a *diesel* car. 
+
+
+## Question 2
+
+1) Interaction: The effect of the heat on caramelization depends on onion-dryness.
+
+2) Not an interaction: The amount an additional cylinder makes a car go faster is not affected by an improved fuel injector I think (but honestly, I have no clue about cars or motors... if a better fuel injector would change how much extra cylinders increase speed, this would be an interaction; Turgut's answer on the discussion board suggests such a synergy effect).
+
+3) Interaction: The effect of parents' beliefs is moderated by the effect of friends' beliefs on the person.
+
+4) Not an interaction. Also not a clear causal relation. Does being intelligent make animals more social, or does being more social make them more intelligent? Does being intelligent allow them to use more appendages, or does using multiple appendages daily make them more intelligent? (For Q3, I'll assume intelligence is dependent on appendages and sociality). 
+
+
+## Question 3
+
+1) 
+$$ \mu_{caramelization} = \alpha + \beta_{1}*heat + \beta_{2}*dryness + \beta_{3} * heat*dryness $$
+
+2) 
+$$ \mu_{speed} = \alpha + \beta_{1}*cylinders + \beta_{2}*injector $$
+
+3) 
+$$ \mu_{beliefs} = \alpha + \beta_{1}*beliefs_{parents} + \beta_{2}*beliefs_{friends} + \beta_{3} * beliefs_{parents} * beliefs_{friends} $$
+
+4) 
+$$ \mu_{intelligence} = \alpha + \beta_{1}*appendages + \beta_{2}*sociality $$
+
+# Medium Questions
+
+## Question 1
+
+All three variables water, shade and temperature affect bloom size. As in the original model, the effect of water on bloom is influenced by the level of shade; and vice-versa (there is an interaction).
+
+Here, however, both the effects of water and shade on blossoming are dependent on the temperature level: If the temperature is high, blooms are set to zero and water and shade have no effect on them. At the low temperature level, the original model works unchanged.
+
+
+## Question 2
+
+Maybe an model like this would work:
+
+$$ \mu_{i} = (\alpha + \beta_{W}*W_{i} + \beta_{S}*S_{i} + \beta_{WS}*W_{i}*S_{i}) * \beta_{T}*T_{i} $$
+
+The variable T is the temperature and has the value zero at the high level, one at the low level. I gave it a coefficient because if we introduce other temperature values (or just treat it as a continuous variable), I would expect the temperature to affect bloom size beyond simply "enabling" it. 
+
+
+## Question 3
+
+My model for the raven population R, based on the presence of wolves W and the population of prey animals P looks like this:
+
+$$ R_{i} = Normal(\mu_{i}, \sigma) $$
+$$ \mu_{i} = \alpha + \beta_{W}*W_{i} + \beta_{P} *P_{i} + \beta_{WP}*W_{i}*P_{i} $$
+
+I think it makes sense to treat the presence of wolves as a binary variable (they either populate an area or they don't), since high school biology taught me that the population of predators is pretty much a linear function of the population of their prey. 
+
+This is what the data could look like:
+```{r, results=FALSE, message=FALSE}
+library(tidyverse)
+library(rethinking)
+library(scales)
+set.seed(100)
+```
+
+```{r}
+d <- tibble(
+  prey = rnorm(100, 0, 1),
+  wolves = rbinom(100, 1, 0.5),
+  ravens = rnorm(100, 0.5*prey + 4*wolves + prey*wolves, 1)
+) %>%
+  mutate(wolves = factor(
+    wolves,
+    levels = c(0, 1),
+    labels = c("no wolves", "wolves")
+  ))
+
+glimpse(d)
+
+ggplot(d, aes(x = prey, y = ravens, col = wolves)) +
+  geom_point() + 
+  theme_minimal() +
+  geom_smooth(se = F, method = "lm") +
+  labs(title = "Raven population by prey population",
+       y = "Raven population",
+       x = "Prey population",
+       col = "Presence of wolves")
+
+```
+
+Even without wolves, ravens are more common the more prey animals populate the area (there are other ways for them to die, even without wolves). However, if wolves also populate the area, the prey population has a much stronger effect on the raven population, as they have better access to the prey. 
+
+In reality, I would not expect this interaction to be linear, as the marginal effects of food sources on (raven) population decline with increasing population; overcrowding, competition of breeding spaces, etc. basically limit the population. 
+
+
+## Question 4
+
+First, we load the tulip data and rescale/center the variables:
+```{r}
+data(tulips)
+d <- tulips %>% 
+  mutate(blooms_std = blooms/max(blooms),
+         water_cent = water - mean(water),
+         shade_cent = shade - mean(shade))
+
+glimpse(d)
+```
+
+Now, we create a model with the updated priors for bw (only positive) & bs (only negative):
+```{r}
+m <- quap(
+  alist(
+    blooms_std ~ dnorm(mu, sigma),
+    mu <-
+      a + bw * water_cent + bs * shade_cent + bws * water_cent * shade_cent,
+    a ~ dnorm(0, .25),
+    bw ~ rescale(dnorm(0, 1), to = c(0, 1)),
+    bs ~ rescale(dnorm(0, 1), to = c(-1, 0)),
+    bws ~ dnorm(0, .25),
+    sigma ~ dexp(1)
+  ),
+  data = d
+)
+
+```
+
+Finally, we plot prior predictions:
+```{r}
+prior <- extract.prior(m)
+
+
+par(mfrow=c(1,3))  
+for (s in-1:1) {
+  idx <- which(d$shade_cent == s)  
+  plot(
+      d$water_cent[idx],
+      d$blooms_std[idx],
+      xlim = c(-1, 1),
+      ylim = c(0, 1),
+      xlab = "water",
+      ylab = "blooms",
+      pch = 16,
+      col = rangi2)  
+  mu <- link(m, post = prior, data = data.frame(shade_cent = s, water_cent = -1:1))  
+  for (i in 1:20) lines(-1:1, mu[i, ], col = col.alpha("black", 0.3))
+} 
+
+
+```
+
+What do these prior assumptions mean for the interaction prior?
+
+
+
+
+
+
+
