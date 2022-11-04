@@ -1,0 +1,212 @@
+---
+title: "SR_9_homework_CR"
+author: "Christoph Rosa"
+date: "2022-11-04"
+output: html_document
+---
+
+# Easy Questions
+
+## Question 1
+
+3) The proposal distribution has to be symmetric.
+
+
+## Question 2
+
+Gibbs-sampling uses *adaptive proposals*, meaning the proposed parameter distribution keeps "adapting" to the current parameter values.
+
+One limitation of Gibbs-sampling is that it requires conjugal priors, which can become problematic in multilevel models. Also, when it comes to complex models with large numbers of parameters, even Gibbs-sampling algorithms become very inefficient. 
+
+
+## Question 3
+
+HMC cannot handle discrete parameters. The reason is that the - much like the "royal vehicle" - the simulated particle that represents our parameter vector has to be able to "stop" at any given point, which is only possible if all the parameters that make up the vector are continuous. 
+
+
+## Question 4
+
+In Stan, the term "n_eff" denotes an estimate of the effective number of independent samples from the posterior distribution. 
+
+The "raw" number of samples can be smaller than that, as the autocorrelation of Markov chains makes sequential samples somewhat dependent on each other; there are therefore less "effective" samples. 
+
+
+## Question 5
+
+Rhat should approach 1.0 from above. 
+
+
+## Question 6
+
+I'll use the terrain data to sketch a good-looking trace plot.
+
+
+```{r, message=FALSE, warning=FALSE}
+# loading packages and data
+library(tidyverse)
+library(rethinking)
+library(rstanarm)
+data(rugged)   
+set.seed(123)
+
+# data wrangling
+d <- rugged %>% 
+  mutate(loggdp = log(rgdppc_2000)) %>% 
+  filter(complete.cases(rgdppc_2000)) %>% 
+  mutate(lgdp_std = loggdp/mean(loggdp),
+         rugged_std = rugged/max(rugged),
+         cid = as.integer(ifelse(cont_africa == 1, 1, 2))) %>% 
+  select(lgdp_std, rugged_std, cid)
+
+# creating chain
+m <-
+  ulam(
+    alist(
+      lgdp_std ~ dnorm(mu, sigma),
+      mu <- a[cid] + b[cid] * (rugged_std - 0.215),
+      a[cid] ~ dnorm(1, 0.1),
+      b[cid] ~ dnorm(0, 0.3),
+      sigma ~ dexp(1)
+    ),
+    data = d,
+    chains = 4,
+    cores = 4
+  )  
+
+# making trace plot
+m2 <- extract.samples(m)
+traceplot(m, pars  = c("a[1]", "a[2]", "b[1]", "b[2]"), chains = 1, trim = 1000, n_cols = 2)
+
+# somehow, the argument "trim" is not doing it's job, making the y-axis scale too large
+```
+
+This is a good trace plot because it is stationary (around a stable mean) and well mixed (no weird spikes, covers a lot of ground).
+
+
+Now, we create a "bad" model:
+```{r, message=FALSE, warning=FALSE}
+# data  
+y <- c(-1,1)
+
+# a bad model with flat priors
+m2 <- ulam(
+  alist(
+    y ~ dnorm(mu, sigma),
+    mu <- alpha,
+    alpha ~ dnorm(0, 1000),
+    sigma ~ dexp(0.001)
+  ),
+  data = list(y = y),
+  chains = 3, 
+  cores = 4
+) 
+
+# and a hopefully bad plot:
+traceplot(m2)
+```
+
+This doesn't look good - the chains are not "stationary", the drift around. Also, they're not well mixed. Instead, we see random spikes into the 1000s. 
+
+
+## Question 7
+
+Now, for the trank plot:
+```{r}
+trankplot(m, pars  = c("a[1]", "a[2]", "b[1]", "b[2]"), n_cols = 2)
+```
+
+Again, a good plot: The histograms overlap and there is no obvious divergence. 
+
+For comparison, a bad trank plot:
+```{r}
+trankplot(m2)
+```
+
+Here, we see divergence: For longer periods, one of the chains' histograms lies above the others.
+
+
+
+# Medium Questions
+
+## Question M1
+
+We repeat our terrain model with a uniform prior for sigma:
+```{r, message=FALSE, warning=FALSE}
+muni <-
+  ulam(
+    alist(
+      lgdp_std ~ dnorm(mu, sigma),
+      mu <- a[cid] + b[cid] * (rugged_std - 0.215),
+      a[cid] ~ dnorm(1, 0.1),
+      b[cid] ~ dnorm(0, 0.3),
+      sigma ~ dunif(0, 1)
+    ),
+    data = d,
+    chains = 4,
+    cores = 4
+  )  
+
+precis(m, 2)
+precis(muni, 2)
+```
+
+It does not have an effect on the posterior distribution of sigma. 
+Considering how many samples we have, the prior for sigma doesn't seem to matter much, as it is easily overcome. It also might help that sigma is constrained to positive values. 
+
+
+## Question M2
+
+Now, we change the prior of b[cid]:
+```{r, message=FALSE, warning=FALSE}
+mb <-
+  ulam(
+    alist(
+      lgdp_std ~ dnorm(mu, sigma),
+      mu <- a[cid] + b[cid] * (rugged_std - 0.215),
+      a[cid] ~ dnorm(1, 0.1),
+      b[cid] ~ dexp(0.3),
+      sigma ~ dexp(1)
+    ),
+    data = d,
+    chains = 4,
+    cores = 4
+  )  
+
+precis(mb, 2)
+
+
+```
+
+The new prior changed the posterior distribution for both betas, but especially the one for countries outside of Africa; its mean decreases to almost zero. 
+
+
+## Question M3
+
+I assume "be sure to use the same number of sampling iterations" refers to the *real samples*, not the "iter" value (total samples.)
+I'll therefore try different values of warmup samples (default was 500) and adjust "iter" so that the number of real samples remains 500.
+```{r, message=FALSE, warning=FALSE}
+# let's try 100 warmup samples 
+m100 <- update(m, warmup = 100, iter = 600)
+m200 <- update(m, warmup = 200, iter = 700)
+m300 <- update(m, warmup = 300, iter = 800)
+
+precis(m, 2)
+precis(m100, 2)
+precis(m200, 2)
+precis(m300, 2)
+```
+
+With our four chains, in the initial model we had 2000 real samples. The number of effective samples (n_eff) was higher than that for all parameters, as it should be. 
+
+With only 100 warmup samples (and still 2000 real samples), n_eff falls significantly below 2000 for many of the parameters.
+
+At 200 warmup samples, only two parameters have n_eff values below 2000, and the difference is less severe.
+
+At 300 warmup samples, two n_eff values are still below 2000, but only marginally. It's fair to say, then, that in this case, we should use at least about 350 warmup samples. 
+
+
+
+
+
+
+
