@@ -173,11 +173,14 @@ mb <-
   )  
 
 precis(mb, 2)
-
-
 ```
 
 The new prior changed the posterior distribution for both betas, but especially the one for countries outside of Africa; its mean decreases to almost zero. 
+We also see that, for most parameters, the n_eff value has decreased noticeably. 
+
+The reason for the change in b[2] is that with the exponential prior distribution we gave it, we effectively limited it to positive values. This explains why b[1] (which should turn out with a mean of ~0.15) remains unchanged with our new prior, and why b[2] (which should have a mean around -0.14) is effectively zero: It "tries" to approach the negative value the samples suggest, but our exponential prior keeps it stuck in the positives. 
+
+On the other hand, I'm not why n_eff decreased so much. Maybe the (quite informative but) wrong prior removes some of the autocorrelation that makes n_eff larger then the actual # of samples in good models?
 
 
 ## Question M3

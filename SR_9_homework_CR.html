@@ -466,6 +466,8 @@ m &lt;-
 ## Chain 2 Iteration: 600 / 1000 [ 60%]  (Sampling) 
 ## Chain 2 Iteration: 700 / 1000 [ 70%]  (Sampling) 
 ## Chain 2 Iteration: 800 / 1000 [ 80%]  (Sampling) 
+## Chain 2 Iteration: 900 / 1000 [ 90%]  (Sampling) 
+## Chain 2 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 3 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 3 Iteration: 100 / 1000 [ 10%]  (Warmup) 
 ## Chain 3 Iteration: 200 / 1000 [ 20%]  (Warmup) 
@@ -474,6 +476,9 @@ m &lt;-
 ## Chain 3 Iteration: 500 / 1000 [ 50%]  (Warmup) 
 ## Chain 3 Iteration: 501 / 1000 [ 50%]  (Sampling) 
 ## Chain 3 Iteration: 600 / 1000 [ 60%]  (Sampling) 
+## Chain 3 Iteration: 700 / 1000 [ 70%]  (Sampling) 
+## Chain 3 Iteration: 800 / 1000 [ 80%]  (Sampling) 
+## Chain 3 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 4 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 4 Iteration: 100 / 1000 [ 10%]  (Warmup) 
 ## Chain 4 Iteration: 200 / 1000 [ 20%]  (Warmup) 
@@ -482,12 +487,7 @@ m &lt;-
 ## Chain 4 Iteration: 500 / 1000 [ 50%]  (Warmup) 
 ## Chain 4 Iteration: 501 / 1000 [ 50%]  (Sampling) 
 ## Chain 1 finished in 0.1 seconds.
-## Chain 2 Iteration: 900 / 1000 [ 90%]  (Sampling) 
-## Chain 2 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 2 finished in 0.1 seconds.
-## Chain 3 Iteration: 700 / 1000 [ 70%]  (Sampling) 
-## Chain 3 Iteration: 800 / 1000 [ 80%]  (Sampling) 
-## Chain 3 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 3 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 3 finished in 0.1 seconds.
 ## Chain 4 Iteration: 600 / 1000 [ 60%]  (Sampling) 
@@ -499,7 +499,7 @@ m &lt;-
 ## 
 ## All 4 chains finished successfully.
 ## Mean chain execution time: 0.1 seconds.
-## Total execution time: 0.9 seconds.</code></pre>
+## Total execution time: 1.5 seconds.</code></pre>
 <pre class="r"><code># making trace plot
 m2 &lt;- extract.samples(m)
 traceplot(m, pars  = c(&quot;a[1]&quot;, &quot;a[2]&quot;, &quot;b[1]&quot;, &quot;b[2]&quot;), chains = 1, trim = 1000, n_cols = 2)</code></pre>
@@ -548,6 +548,7 @@ m2 &lt;- ulam(
 ## Chain 2 Iteration: 700 / 1000 [ 70%]  (Sampling) 
 ## Chain 2 Iteration: 800 / 1000 [ 80%]  (Sampling) 
 ## Chain 2 Iteration: 900 / 1000 [ 90%]  (Sampling) 
+## Chain 2 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 3 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 3 Iteration: 100 / 1000 [ 10%]  (Warmup) 
 ## Chain 3 Iteration: 200 / 1000 [ 20%]  (Warmup) 
@@ -561,13 +562,12 @@ m2 &lt;- ulam(
 ## Chain 3 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 3 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 1 finished in 0.1 seconds.
-## Chain 2 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 2 finished in 0.1 seconds.
 ## Chain 3 finished in 0.1 seconds.
 ## 
 ## All 3 chains finished successfully.
 ## Mean chain execution time: 0.1 seconds.
-## Total execution time: 0.5 seconds.</code></pre>
+## Total execution time: 0.8 seconds.</code></pre>
 <pre class="r"><code># and a hopefully bad plot:
 traceplot(m2)</code></pre>
 <p><img src="data:image/png;base64,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" width="672" /></p>
@@ -617,10 +617,6 @@ histograms lies above the others.</p>
 ## Chain 1 Iteration: 500 / 1000 [ 50%]  (Warmup) 
 ## Chain 1 Iteration: 501 / 1000 [ 50%]  (Sampling) 
 ## Chain 1 Iteration: 600 / 1000 [ 60%]  (Sampling) 
-## Chain 1 Iteration: 700 / 1000 [ 70%]  (Sampling) 
-## Chain 1 Iteration: 800 / 1000 [ 80%]  (Sampling) 
-## Chain 1 Iteration: 900 / 1000 [ 90%]  (Sampling) 
-## Chain 1 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 2 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 2 Iteration: 100 / 1000 [ 10%]  (Warmup) 
 ## Chain 2 Iteration: 200 / 1000 [ 20%]  (Warmup) 
@@ -628,31 +624,35 @@ histograms lies above the others.</p>
 ## Chain 2 Iteration: 400 / 1000 [ 40%]  (Warmup) 
 ## Chain 2 Iteration: 500 / 1000 [ 50%]  (Warmup) 
 ## Chain 2 Iteration: 501 / 1000 [ 50%]  (Sampling) 
-## Chain 2 Iteration: 600 / 1000 [ 60%]  (Sampling) 
-## Chain 2 Iteration: 700 / 1000 [ 70%]  (Sampling) 
-## Chain 2 Iteration: 800 / 1000 [ 80%]  (Sampling) 
 ## Chain 3 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 3 Iteration: 100 / 1000 [ 10%]  (Warmup) 
 ## Chain 3 Iteration: 200 / 1000 [ 20%]  (Warmup) 
 ## Chain 3 Iteration: 300 / 1000 [ 30%]  (Warmup) 
 ## Chain 3 Iteration: 400 / 1000 [ 40%]  (Warmup) 
-## Chain 3 Iteration: 500 / 1000 [ 50%]  (Warmup) 
-## Chain 3 Iteration: 501 / 1000 [ 50%]  (Sampling) 
-## Chain 3 Iteration: 600 / 1000 [ 60%]  (Sampling) 
-## Chain 3 Iteration: 700 / 1000 [ 70%]  (Sampling) 
 ## Chain 4 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 4 Iteration: 100 / 1000 [ 10%]  (Warmup) 
 ## Chain 4 Iteration: 200 / 1000 [ 20%]  (Warmup) 
 ## Chain 4 Iteration: 300 / 1000 [ 30%]  (Warmup) 
-## Chain 4 Iteration: 400 / 1000 [ 40%]  (Warmup) 
+## Chain 1 Iteration: 700 / 1000 [ 70%]  (Sampling) 
+## Chain 1 Iteration: 800 / 1000 [ 80%]  (Sampling) 
+## Chain 1 Iteration: 900 / 1000 [ 90%]  (Sampling) 
+## Chain 1 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 1 finished in 0.1 seconds.
+## Chain 2 Iteration: 600 / 1000 [ 60%]  (Sampling) 
+## Chain 2 Iteration: 700 / 1000 [ 70%]  (Sampling) 
+## Chain 2 Iteration: 800 / 1000 [ 80%]  (Sampling) 
 ## Chain 2 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 2 Iteration: 1000 / 1000 [100%]  (Sampling) 
-## Chain 2 finished in 0.1 seconds.
+## Chain 2 finished in 0.2 seconds.
+## Chain 3 Iteration: 500 / 1000 [ 50%]  (Warmup) 
+## Chain 3 Iteration: 501 / 1000 [ 50%]  (Sampling) 
+## Chain 3 Iteration: 600 / 1000 [ 60%]  (Sampling) 
+## Chain 3 Iteration: 700 / 1000 [ 70%]  (Sampling) 
 ## Chain 3 Iteration: 800 / 1000 [ 80%]  (Sampling) 
 ## Chain 3 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 3 Iteration: 1000 / 1000 [100%]  (Sampling) 
-## Chain 3 finished in 0.1 seconds.
+## Chain 3 finished in 0.2 seconds.
+## Chain 4 Iteration: 400 / 1000 [ 40%]  (Warmup) 
 ## Chain 4 Iteration: 500 / 1000 [ 50%]  (Warmup) 
 ## Chain 4 Iteration: 501 / 1000 [ 50%]  (Sampling) 
 ## Chain 4 Iteration: 600 / 1000 [ 60%]  (Sampling) 
@@ -660,10 +660,10 @@ histograms lies above the others.</p>
 ## Chain 4 Iteration: 800 / 1000 [ 80%]  (Sampling) 
 ## Chain 4 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 4 Iteration: 1000 / 1000 [100%]  (Sampling) 
-## Chain 4 finished in 0.1 seconds.
+## Chain 4 finished in 0.2 seconds.
 ## 
 ## All 4 chains finished successfully.
-## Mean chain execution time: 0.1 seconds.
+## Mean chain execution time: 0.2 seconds.
 ## Total execution time: 0.4 seconds.</code></pre>
 <pre class="r"><code>precis(m, 2)</code></pre>
 <pre><code>##             mean          sd         5.5%       94.5%    n_eff     Rhat4
@@ -704,21 +704,14 @@ is constrained to positive values.</p>
 ## 
 ## Chain 1 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 1 Iteration: 100 / 1000 [ 10%]  (Warmup) 
-## Chain 1 Iteration: 200 / 1000 [ 20%]  (Warmup) 
 ## Chain 2 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 2 Iteration: 100 / 1000 [ 10%]  (Warmup) 
 ## Chain 2 Iteration: 200 / 1000 [ 20%]  (Warmup) 
-## Chain 2 Iteration: 300 / 1000 [ 30%]  (Warmup) 
-## Chain 2 Iteration: 400 / 1000 [ 40%]  (Warmup) 
 ## Chain 3 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 3 Iteration: 100 / 1000 [ 10%]  (Warmup) 
-## Chain 3 Iteration: 200 / 1000 [ 20%]  (Warmup) 
-## Chain 3 Iteration: 300 / 1000 [ 30%]  (Warmup) 
 ## Chain 4 Iteration:   1 / 1000 [  0%]  (Warmup) 
 ## Chain 4 Iteration: 100 / 1000 [ 10%]  (Warmup) 
-## Chain 4 Iteration: 200 / 1000 [ 20%]  (Warmup) 
-## Chain 4 Iteration: 300 / 1000 [ 30%]  (Warmup) 
-## Chain 4 Iteration: 400 / 1000 [ 40%]  (Warmup) 
+## Chain 1 Iteration: 200 / 1000 [ 20%]  (Warmup) 
 ## Chain 1 Iteration: 300 / 1000 [ 30%]  (Warmup) 
 ## Chain 1 Iteration: 400 / 1000 [ 40%]  (Warmup) 
 ## Chain 1 Iteration: 500 / 1000 [ 50%]  (Warmup) 
@@ -729,6 +722,8 @@ is constrained to positive values.</p>
 ## Chain 1 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 1 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 1 finished in 0.2 seconds.
+## Chain 2 Iteration: 300 / 1000 [ 30%]  (Warmup) 
+## Chain 2 Iteration: 400 / 1000 [ 40%]  (Warmup) 
 ## Chain 2 Iteration: 500 / 1000 [ 50%]  (Warmup) 
 ## Chain 2 Iteration: 501 / 1000 [ 50%]  (Sampling) 
 ## Chain 2 Iteration: 600 / 1000 [ 60%]  (Sampling) 
@@ -737,6 +732,8 @@ is constrained to positive values.</p>
 ## Chain 2 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 2 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 2 finished in 0.2 seconds.
+## Chain 3 Iteration: 200 / 1000 [ 20%]  (Warmup) 
+## Chain 3 Iteration: 300 / 1000 [ 30%]  (Warmup) 
 ## Chain 3 Iteration: 400 / 1000 [ 40%]  (Warmup) 
 ## Chain 3 Iteration: 500 / 1000 [ 50%]  (Warmup) 
 ## Chain 3 Iteration: 501 / 1000 [ 50%]  (Sampling) 
@@ -746,6 +743,9 @@ is constrained to positive values.</p>
 ## Chain 3 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 3 Iteration: 1000 / 1000 [100%]  (Sampling) 
 ## Chain 3 finished in 0.2 seconds.
+## Chain 4 Iteration: 200 / 1000 [ 20%]  (Warmup) 
+## Chain 4 Iteration: 300 / 1000 [ 30%]  (Warmup) 
+## Chain 4 Iteration: 400 / 1000 [ 40%]  (Warmup) 
 ## Chain 4 Iteration: 500 / 1000 [ 50%]  (Warmup) 
 ## Chain 4 Iteration: 501 / 1000 [ 50%]  (Sampling) 
 ## Chain 4 Iteration: 600 / 1000 [ 60%]  (Sampling) 
@@ -753,11 +753,11 @@ is constrained to positive values.</p>
 ## Chain 4 Iteration: 800 / 1000 [ 80%]  (Sampling) 
 ## Chain 4 Iteration: 900 / 1000 [ 90%]  (Sampling) 
 ## Chain 4 Iteration: 1000 / 1000 [100%]  (Sampling) 
-## Chain 4 finished in 0.1 seconds.
+## Chain 4 finished in 0.2 seconds.
 ## 
 ## All 4 chains finished successfully.
 ## Mean chain execution time: 0.2 seconds.
-## Total execution time: 0.3 seconds.</code></pre>
+## Total execution time: 0.4 seconds.</code></pre>
 <pre class="r"><code>precis(mb, 2)</code></pre>
 <pre><code>##             mean          sd        5.5%      94.5%     n_eff     Rhat4
 ## a[1]  0.88746798 0.016355635 0.862178655 0.91372579 1986.0751 1.0005119
@@ -767,7 +767,18 @@ is constrained to positive values.</p>
 ## sigma 0.11419234 0.006299071 0.104476120 0.12477300 1610.4463 0.9992230</code></pre>
 <p>The new prior changed the posterior distribution for both betas, but
 especially the one for countries outside of Africa; its mean decreases
-to almost zero.</p>
+to almost zero. We also see that, for most parameters, the n_eff value
+has decreased noticeably.</p>
+<p>The reason for the change in b[2] is that with the exponential prior
+distribution we gave it, we effectively limited it to positive values.
+This explains why b[1] (which should turn out with a mean of ~0.15)
+remains unchanged with our new prior, and why b[2] (which should have a
+mean around -0.14) is effectively zero: It “tries” to approach the
+negative value the samples suggest, but our exponential prior keeps it
+stuck in the positives.</p>
+<p>On the other hand, I’m not why n_eff decreased so much. Maybe the
+(quite informative but) wrong prior removes some of the autocorrelation
+that makes n_eff larger then the actual # of samples in good models?</p>
 </div>
 <div id="question-m3" class="section level2">
 <h2>Question M3</h2>
@@ -809,7 +820,6 @@ m100 &lt;- update(m, warmup = 100, iter = 600)</code></pre>
 ## Chain 2 Iteration: 300 / 600 [ 50%]  (Sampling) 
 ## Chain 2 Iteration: 400 / 600 [ 66%]  (Sampling) 
 ## Chain 2 Iteration: 500 / 600 [ 83%]  (Sampling) 
-## Chain 2 Iteration: 600 / 600 [100%]  (Sampling) 
 ## Chain 3 WARNING: There aren&#39;t enough warmup iterations to fit the 
 ## Chain 3          three stages of adaptation as currently configured. 
 ## Chain 3          Reducing each adaptation stage to 15%/75%/10% of 
@@ -823,7 +833,6 @@ m100 &lt;- update(m, warmup = 100, iter = 600)</code></pre>
 ## Chain 3 Iteration: 200 / 600 [ 33%]  (Sampling) 
 ## Chain 3 Iteration: 300 / 600 [ 50%]  (Sampling) 
 ## Chain 3 Iteration: 400 / 600 [ 66%]  (Sampling) 
-## Chain 3 Iteration: 500 / 600 [ 83%]  (Sampling) 
 ## Chain 4 WARNING: There aren&#39;t enough warmup iterations to fit the 
 ## Chain 4          three stages of adaptation as currently configured. 
 ## Chain 4          Reducing each adaptation stage to 15%/75%/10% of 
@@ -838,7 +847,9 @@ m100 &lt;- update(m, warmup = 100, iter = 600)</code></pre>
 ## Chain 4 Iteration: 300 / 600 [ 50%]  (Sampling) 
 ## Chain 4 Iteration: 400 / 600 [ 66%]  (Sampling) 
 ## Chain 1 finished in 0.1 seconds.
+## Chain 2 Iteration: 600 / 600 [100%]  (Sampling) 
 ## Chain 2 finished in 0.1 seconds.
+## Chain 3 Iteration: 500 / 600 [ 83%]  (Sampling) 
 ## Chain 3 Iteration: 600 / 600 [100%]  (Sampling) 
 ## Chain 3 finished in 0.1 seconds.
 ## Chain 4 Iteration: 500 / 600 [ 83%]  (Sampling) 
@@ -847,7 +858,7 @@ m100 &lt;- update(m, warmup = 100, iter = 600)</code></pre>
 ## 
 ## All 4 chains finished successfully.
 ## Mean chain execution time: 0.1 seconds.
-## Total execution time: 0.4 seconds.</code></pre>
+## Total execution time: 0.9 seconds.</code></pre>
 <pre class="r"><code>m200 &lt;- update(m, warmup = 200, iter = 700)</code></pre>
 <pre><code>## Running MCMC with 4 parallel chains, with 1 thread(s) per chain...
 ## 
